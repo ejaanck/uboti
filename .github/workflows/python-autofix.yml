@@ -1,26 +1,26 @@
-name: Python Autofix
-on: [push, pull_request]
-
+namename: Auto Fix
+on: [push]
 jobs:
-  autofix:
+  python-auto-fix:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-    - name: Install dependencies
-      run: pip install black
-    - name: Auto-fix with Black
-      run: black .
-      continue-on-error: true
-    - name: Commit changes
-      run: |
-        git config --global user.name 'Robotikaazazel'
-        git config --global user.email 'bakpawtetew@gmail.com'
-        git commit -am "Auto-fix with Black" || echo "No changes to commit"
-    - name: Push changes
-      uses: Robotikaazazel/azazelUbott@naya
-      with:
-        branch: ${{ github.ref }}
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort autoflake flake8
+      - name: Auto Fix
+        run: |
+          black --exclude=venv .
+          isort --skip-glob='**/venv/**' .
+          autoflake --in-place --recursive --remove-all-unused-imports --remove-unused-variables --ignore-init-module-imports .
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --extend-ignore=E203,W503
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Code Analysis
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Auto Fix"
+          commit_options: "--no-verify"
